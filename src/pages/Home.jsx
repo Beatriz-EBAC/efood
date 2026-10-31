@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
@@ -129,58 +130,32 @@ const SocialIcon = styled.span`
   font-size: 12px;
 `;
 
-const restaurantes = [
-  {
-    id: 1,
-    nome: 'Hiki Sushi',
-    categoria: 'Japonesa',
-    nota: '4.9',
-    imagem: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800',
-    descricao: 'Experimente a culinária japonesa com pratos frescos e deliciosos.',
-  },
-  {
-    id: 2,
-    nome: 'La Dolce Vita Trattoria',
-    categoria: 'Italiana',
-    nota: '4.6',
-    imagem: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800',
-    descricao: 'Cozinha italiana autêntica, com massas e sabores inesquecíveis.',
-  },
-  {
-    id: 3,
-    nome: 'La Dolce Vita Trattoria',
-    categoria: 'Italiana',
-    nota: '4.6',
-    imagem: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800',
-    descricao: 'Desfrute de pratos deliciosos preparados com ingredientes selecionados.',
-  },
-  {
-    id: 4,
-    nome: 'La Dolce Vita Trattoria',
-    categoria: 'Italiana',
-    nota: '4.6',
-    imagem: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800',
-    descricao: 'Uma experiência gastronômica especial no conforto da sua casa.',
-  },
-  {
-    id: 5,
-    nome: 'La Dolce Vita Trattoria',
-    categoria: 'Italiana',
-    nota: '4.6',
-    imagem: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800',
-    descricao: 'Sabores italianos preparados com ingredientes selecionados.',
-  },
-  {
-    id: 6,
-    nome: 'La Dolce Vita Trattoria',
-    categoria: 'Italiana',
-    nota: '4.6',
-    imagem: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800',
-    descricao: 'Uma experiência gastronômica para toda a família.',
-  },
-];
+const API = 'https://api-ebac.vercel.app/api/efood/restaurantes';
 
 function Home() {
+  const [restaurantes, setRestaurantes] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState('');
+
+  useEffect(() => {
+    fetch(API)
+      .then((resposta) => {
+        if (!resposta.ok) {
+          throw new Error('Erro ao carregar restaurantes');
+        }
+        return resposta.json();
+      })
+      .then((dados) => {
+        setRestaurantes(dados);
+      })
+      .catch(() => {
+        setErro('Não foi possível carregar os restaurantes.');
+      })
+      .finally(() => {
+        setCarregando(false);
+      });
+  }, []);
+
   return (
     <>
       <Header>
@@ -193,22 +168,25 @@ function Home() {
       </Header>
 
       <Container>
+        {carregando && <p>Carregando restaurantes...</p>}
+        {erro && <p>{erro}</p>}
+
         <Grid>
           {restaurantes.map((restaurante) => (
             <Card key={restaurante.id}>
-              <Image $image={restaurante.imagem}>
-                <Tag>{restaurante.categoria}</Tag>
+              <Image $image={restaurante.capa}>
+                <Tag>{restaurante.tipo}</Tag>
               </Image>
 
               <Info>
                 <Title>
-                  {restaurante.nome}
-                  <Rating>{restaurante.nota} ⭐</Rating>
+                  {restaurante.titulo}
+                  <Rating>{restaurante.avaliacao} ⭐</Rating>
                 </Title>
 
                 <Description>{restaurante.descricao}</Description>
 
-                <DetailsLink to="/perfil">
+                <DetailsLink to={`/perfil/${restaurante.id}`}>
                   Saiba mais
                 </DetailsLink>
               </Info>

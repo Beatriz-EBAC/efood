@@ -19,18 +19,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={
-            <Home
-              carrinho={carrinho}
-              adicionarAoCarrinho={adicionarAoCarrinho}
-            />
-          }
-        />
+        <Route path="/" element={<Home />} />
 
         <Route
-          path="/perfil"
+          path="/perfil/:id"
           element={
             <Perfil
               carrinho={carrinho}

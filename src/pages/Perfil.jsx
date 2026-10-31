@@ -1,7 +1,9 @@
 
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+
+const API = 'https://api-ebac.vercel.app/api/efood/restaurantes';
 
 const Header = styled.header`
   background: #fff0e5;
@@ -11,18 +13,16 @@ const Header = styled.header`
   align-items: center;
   justify-content: space-between;
   color: #e66767;
-  font-size: 13px;
 `;
 
 const HeaderLink = styled(Link)`
   color: #e66767;
   font-weight: bold;
+  text-decoration: none;
 `;
 
 const Logo = styled.h1`
-  border: 2px solid #e66767;
-  padding: 3px 7px;
-  font-size: 20px;
+  font-size: 24px;
 `;
 
 const CartButton = styled.button`
@@ -30,41 +30,42 @@ const CartButton = styled.button`
   background: transparent;
   color: #e66767;
   cursor: pointer;
+  font-weight: bold;
 `;
 
 const Banner = styled.section`
-  height: 120px;
+  min-height: 280px;
   background-image:
-    linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
-    url('https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=1200');
+    linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.45)),
+    url(${props => props.$image});
   background-size: cover;
   background-position: center;
   color: white;
-  padding: 15px 12%;
+  padding: 25px 12%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 `;
 
 const Category = styled.span`
-  font-size: 16px;
+  font-size: 32px;
 `;
 
 const RestaurantName = styled.h2`
-  font-size: 20px;
+  font-size: 32px;
 `;
 
 const Main = styled.main`
   background: #fff8f2;
-  padding: 35px 20px 50px;
+  padding: 50px 20px;
 `;
 
 const Grid = styled.div`
-  max-width: 900px;
+  max-width: 1100px;
   margin: auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px 24px;
+  gap: 24px;
 
   @media (max-width: 700px) {
     grid-template-columns: repeat(2, 1fr);
@@ -77,30 +78,30 @@ const Grid = styled.div`
 
 const DishCard = styled.article`
   background: #e66767;
-  padding: 5px;
+  padding: 8px;
   color: white;
 `;
 
 const DishImage = styled.img`
   width: 100%;
-  height: 115px;
+  height: 160px;
   object-fit: cover;
   display: block;
 `;
 
 const DishInfo = styled.div`
-  padding: 7px 3px 2px;
+  padding: 10px 3px;
 `;
 
 const DishName = styled.h3`
-  font-size: 13px;
-  margin-bottom: 5px;
+  font-size: 17px;
+  margin-bottom: 8px;
 `;
 
 const Description = styled.p`
-  font-size: 10px;
-  line-height: 1.4;
-  min-height: 45px;
+  font-size: 12px;
+  line-height: 1.5;
+  min-height: 55px;
 `;
 
 const AddButton = styled.button`
@@ -108,9 +109,13 @@ const AddButton = styled.button`
   border: none;
   background: #fff0e5;
   color: #e66767;
-  padding: 6px;
-  font-size: 11px;
+  padding: 10px;
+  font-weight: bold;
   cursor: pointer;
+
+  &:hover {
+    background: white;
+  }
 `;
 
 const Footer = styled.footer`
@@ -124,32 +129,9 @@ const Footer = styled.footer`
   color: #e66767;
 `;
 
-const FooterLogo = styled(Logo)`
-  font-size: 20px;
-`;
-
-const Socials = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const SocialIcon = styled.span`
-  background: #e66767;
-  color: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-`;
-
 const FooterText = styled.p`
-  font-size: 8px;
+  font-size: 11px;
   text-align: center;
-  max-width: 350px;
-  padding: 0 10px;
 `;
 
 const Overlay = styled.div`
@@ -167,13 +149,13 @@ const Panel = styled.aside`
   height: 100%;
   overflow-y: auto;
   background: #e66767;
-  padding: 10px;
+  padding: 20px;
   color: white;
 `;
 
 const PanelTitle = styled.h3`
-  font-size: 13px;
-  margin-bottom: 12px;
+  font-size: 18px;
+  margin-bottom: 20px;
 `;
 
 const CartItem = styled.div`
@@ -196,11 +178,11 @@ const CartDetails = styled.div`
   flex: 1;
 
   h4 {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   p {
-    font-size: 10px;
+    font-size: 12px;
     margin-top: 5px;
   }
 `;
@@ -215,37 +197,36 @@ const RemoveButton = styled.button`
 const Total = styled.div`
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
-  margin: 20px 0 10px;
+  font-size: 14px;
+  margin: 20px 0;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 12px;
 `;
 
 const Field = styled.label`
   display: flex;
   flex-direction: column;
   gap: 5px;
-  font-size: 11px;
+  font-size: 12px;
 `;
 
 const Input = styled.input`
   width: 100%;
-  height: 25px;
+  height: 35px;
   border: none;
   background: #fff0e5;
-  padding: 5px;
+  padding: 8px;
   color: #333;
-  outline: none;
 `;
 
 const FieldRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 10px;
 `;
 
 const PanelButton = styled.button`
@@ -253,30 +234,92 @@ const PanelButton = styled.button`
   border: none;
   background: #fff0e5;
   color: #e66767;
-  padding: 7px;
-  margin-bottom: 5px;
+  padding: 12px;
+  margin-top: 8px;
   cursor: pointer;
-  font-size: 11px;
+  font-weight: bold;
+
+  &:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
 `;
 
 const ConfirmationText = styled.p`
-  font-size: 12px;
-  line-height: 1.5;
-  margin: 12px 0;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 15px 0;
 `;
 
-const pratos = Array.from({ length: 6 }, (_, index) => ({
-  id: index + 1,
-  nome: 'Pizza Margherita',
-  preco: 60.90,
-  imagem: 'https://images.unsplash.com/photo-1579751626657-72bc17010498?w=600',
-}));
+const ProductOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, .8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+`;
+
+const ProductModal = styled.div`
+  background: #e66767;
+  color: white;
+  width: 100%;
+  max-width: 700px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  position: relative;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+`;
+
+const ModalImage = styled.img`
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+`;
+
+const ModalInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 15px;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border: none;
+  background: #fff0e5;
+  color: #e66767;
+  padding: 6px 10px;
+  cursor: pointer;
+`;
+
+const Price = styled.p`
+  font-size: 20px;
+  font-weight: bold;
+`;
 
 function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
-  const [etapa, setEtapa] = useState('carrinho');
+  const { id } = useParams();
+
+  const [restaurante, setRestaurante] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState('');
+  const [produtoSelecionado, setProdutoSelecionado] = useState(null);
+  const [etapa, setEtapa] = useState('fechado');
 
   const [dadosEntrega, setDadosEntrega] = useState({
-    nome: 'João Paulo de Souza',
+    nome: '',
     endereco: '',
     cidade: '',
     cep: '',
@@ -285,19 +328,50 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
   });
 
   const [dadosPagamento, setDadosPagamento] = useState({
-    nomeCartao: 'João Paulo de Souza',
+    nomeCartao: '',
     numeroCartao: '',
     cvv: '',
     mes: '',
     ano: '',
   });
 
-  const [pedidoId] = useState(() => Math.floor(10000 + Math.random() * 90000));
+  const [pedidoId] = useState(
+    () => Math.floor(10000 + Math.random() * 90000)
+  );
 
-  const total = carrinho.reduce((soma, prato) => soma + prato.preco, 0);
+  useEffect(() => {
+    fetch(API)
+      .then((resposta) => {
+        if (!resposta.ok) {
+          throw new Error('Erro ao carregar restaurante');
+        }
+        return resposta.json();
+      })
+      .then((dados) => {
+        const encontrado = dados.find(
+          (item) => String(item.id) === String(id)
+        );
+
+        if (!encontrado) {
+          throw new Error('Restaurante não encontrado');
+        }
+
+        setRestaurante(encontrado);
+      })
+      .catch(() => {
+        setErro('Não foi possível carregar o restaurante.');
+      })
+      .finally(() => {
+        setCarregando(false);
+      });
+  }, [id]);
+
+  const total = carrinho.reduce(
+    (soma, prato) => soma + Number(prato.preco), 0
+  );
 
   const formatarPreco = (valor) =>
-    valor.toLocaleString('pt-BR', {
+    Number(valor).toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     });
@@ -317,6 +391,18 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
     setEtapa('confirmacao');
   }
 
+  function comprarProduto() {
+    adicionarAoCarrinho({
+      ...produtoSelecionado,
+      imagem: produtoSelecionado.foto,
+    });
+    setProdutoSelecionado(null);
+  }
+
+  if (carregando) return <p>Carregando restaurante...</p>;
+  if (erro) return <p>{erro}</p>;
+  if (!restaurante) return null;
+
   return (
     <>
       <Header>
@@ -327,28 +413,21 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
         </CartButton>
       </Header>
 
-      <Banner>
-        <Category>Italiana</Category>
-        <RestaurantName>La Dolce Vita Trattoria</RestaurantName>
+      <Banner $image={restaurante.capa}>
+        <Category>{restaurante.tipo}</Category>
+        <RestaurantName>{restaurante.titulo}</RestaurantName>
       </Banner>
 
       <Main>
         <Grid>
-          {pratos.map((prato) => (
+          {restaurante.cardapio.map((prato) => (
             <DishCard key={prato.id}>
-              <DishImage src={prato.imagem} alt={prato.nome} />
+              <DishImage src={prato.foto} alt={prato.nome} />
               <DishInfo>
                 <DishName>{prato.nome}</DishName>
-                <Description>
-                  A clássica Margherita: molho de tomate suculento,
-                  mussarela derretida, manjericão fresco e um toque de azeite.
-                  Sabor e simplicidade!
-                </Description>
-                <AddButton onClick={() => {
-                  adicionarAoCarrinho(prato);
-                  setEtapa('carrinho');
-                }}>
-                  Adicionar ao carrinho
+                <Description>{prato.descricao}</Description>
+                <AddButton onClick={() => setProdutoSelecionado(prato)}>
+                  Comprar produto
                 </AddButton>
               </DishInfo>
             </DishCard>
@@ -357,17 +436,41 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
       </Main>
 
       <Footer>
-        <FooterLogo>efood 🍴</FooterLogo>
-        <Socials>
-          <SocialIcon>◎</SocialIcon>
-          <SocialIcon>f</SocialIcon>
-          <SocialIcon>●</SocialIcon>
-        </Socials>
+        <Logo>efood 🍴</Logo>
         <FooterText>
           A efood é uma plataforma para divulgação de estabelecimentos,
           de responsabilidade dos seus parceiros.
         </FooterText>
       </Footer>
+
+      {produtoSelecionado && (
+        <ProductOverlay onClick={() => setProdutoSelecionado(null)}>
+          <ProductModal onClick={(evento) => evento.stopPropagation()}>
+            <CloseButton onClick={() => setProdutoSelecionado(null)}>
+              X
+            </CloseButton>
+
+            <ModalImage
+              src={produtoSelecionado.foto}
+              alt={produtoSelecionado.nome}
+            />
+
+            <ModalInfo>
+              <div>
+                <h2>{produtoSelecionado.nome}</h2>
+                <p>{produtoSelecionado.descricao}</p>
+                <p>Porção: {produtoSelecionado.porcao}</p>
+              </div>
+
+              <Price>{formatarPreco(produtoSelecionado.preco)}</Price>
+
+              <PanelButton onClick={comprarProduto}>
+                Adicionar ao carrinho
+              </PanelButton>
+            </ModalInfo>
+          </ProductModal>
+        </ProductOverlay>
+      )}
 
       {etapa !== 'fechado' && (
         <Overlay onClick={() => setEtapa('fechado')}>
@@ -375,9 +478,16 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
 
             {etapa === 'carrinho' && (
               <>
+                <PanelTitle>Seu carrinho</PanelTitle>
+
+                {carrinho.length === 0 && <p>Seu carrinho está vazio.</p>}
+
                 {carrinho.map((prato, index) => (
                   <CartItem key={`${prato.id}-${index}`}>
-                    <CartImage src={prato.imagem} alt={prato.nome} />
+                    <CartImage
+                      src={prato.imagem || prato.foto}
+                      alt={prato.nome}
+                    />
                     <CartDetails>
                       <h4>{prato.nome}</h4>
                       <p>{formatarPreco(prato.preco)}</p>
@@ -394,8 +504,8 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
                 </Total>
 
                 <PanelButton
-                  onClick={() => setEtapa('entrega')}
                   disabled={carrinho.length === 0}
+                  onClick={() => setEtapa('entrega')}
                 >
                   Continuar com a entrega
                 </PanelButton>
@@ -410,36 +520,36 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
                   evento.preventDefault();
                   setEtapa('pagamento');
                 }}>
-                  <Field>
-                    Quem irá receber
-                    <Input name="nome" value={dadosEntrega.nome} onChange={atualizarEntrega} required />
+                  <Field>Quem irá receber
+                    <Input name="nome" value={dadosEntrega.nome}
+                      onChange={atualizarEntrega} required />
                   </Field>
 
-                  <Field>
-                    Endereço
-                    <Input name="endereco" value={dadosEntrega.endereco} onChange={atualizarEntrega} required />
+                  <Field>Endereço
+                    <Input name="endereco" value={dadosEntrega.endereco}
+                      onChange={atualizarEntrega} required />
                   </Field>
 
-                  <Field>
-                    Cidade
-                    <Input name="cidade" value={dadosEntrega.cidade} onChange={atualizarEntrega} required />
+                  <Field>Cidade
+                    <Input name="cidade" value={dadosEntrega.cidade}
+                      onChange={atualizarEntrega} required />
                   </Field>
 
                   <FieldRow>
-                    <Field>
-                      CEP
-                      <Input name="cep" value={dadosEntrega.cep} onChange={atualizarEntrega} required />
+                    <Field>CEP
+                      <Input name="cep" value={dadosEntrega.cep}
+                        onChange={atualizarEntrega} required />
                     </Field>
-
-                    <Field>
-                      Número
-                      <Input name="numero" value={dadosEntrega.numero} onChange={atualizarEntrega} required />
+                    <Field>Número
+                      <Input name="numero" value={dadosEntrega.numero}
+                        onChange={atualizarEntrega} required />
                     </Field>
                   </FieldRow>
 
-                  <Field>
-                    Complemento (opcional)
-                    <Input name="complemento" value={dadosEntrega.complemento} onChange={atualizarEntrega} />
+                  <Field>Complemento
+                    <Input name="complemento"
+                      value={dadosEntrega.complemento}
+                      onChange={atualizarEntrega} />
                   </Field>
 
                   <PanelButton type="submit">
@@ -448,7 +558,7 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
                 </Form>
 
                 <PanelButton onClick={() => setEtapa('carrinho')}>
-                  Voltar para o carrinho
+                  Voltar
                 </PanelButton>
               </>
             )}
@@ -456,71 +566,41 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
             {etapa === 'pagamento' && (
               <>
                 <PanelTitle>
-                  Pagamento - Valor a pagar {formatarPreco(total)}
+                  Pagamento - {formatarPreco(total)}
                 </PanelTitle>
 
                 <Form onSubmit={finalizarPagamento}>
-                  <Field>
-                    Nome no cartão
-                    <Input
-                      name="nomeCartao"
+                  <Field>Nome no cartão
+                    <Input name="nomeCartao"
                       value={dadosPagamento.nomeCartao}
+                      onChange={atualizarPagamento} required />
+                  </Field>
+
+                  <Field>Número do cartão
+                    <Input name="numeroCartao"
+                      value={dadosPagamento.numeroCartao}
                       onChange={atualizarPagamento}
-                      required
-                    />
+                      inputMode="numeric" maxLength={19} required />
                   </Field>
 
                   <FieldRow>
-                    <Field>
-                      Número do cartão
-                      <Input
-                        name="numeroCartao"
-                        value={dadosPagamento.numeroCartao}
+                    <Field>CVV
+                      <Input name="cvv" value={dadosPagamento.cvv}
                         onChange={atualizarPagamento}
-                        inputMode="numeric"
-                        maxLength={19}
-                        required
-                      />
+                        inputMode="numeric" maxLength={4} required />
                     </Field>
-
-                    <Field>
-                      CVV
-                      <Input
-                        name="cvv"
-                        value={dadosPagamento.cvv}
+                    <Field>Mês
+                      <Input name="mes" value={dadosPagamento.mes}
                         onChange={atualizarPagamento}
-                        inputMode="numeric"
-                        maxLength={4}
-                        required
-                      />
+                        placeholder="MM" maxLength={2} required />
                     </Field>
                   </FieldRow>
 
-                  <FieldRow>
-                    <Field>
-                      Mês de vencimento
-                      <Input
-                        name="mes"
-                        value={dadosPagamento.mes}
-                        onChange={atualizarPagamento}
-                        placeholder="MM"
-                        maxLength={2}
-                        required
-                      />
-                    </Field>
-
-                    <Field>
-                      Ano de vencimento
-                      <Input
-                        name="ano"
-                        value={dadosPagamento.ano}
-                        onChange={atualizarPagamento}
-                        placeholder="AAAA"
-                        maxLength={4}
-                        required
-                      />
-                    </Field>
-                  </FieldRow>
+                  <Field>Ano de vencimento
+                    <Input name="ano" value={dadosPagamento.ano}
+                      onChange={atualizarPagamento}
+                      placeholder="AAAA" maxLength={4} required />
+                  </Field>
 
                   <PanelButton type="submit">
                     Finalizar pagamento
@@ -528,31 +608,18 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
                 </Form>
 
                 <PanelButton onClick={() => setEtapa('entrega')}>
-                  Voltar para a edição de endereço
+                  Voltar
                 </PanelButton>
               </>
             )}
 
             {etapa === 'confirmacao' && (
               <>
-                <PanelTitle>
-                  Pedido realizado - #{pedidoId}
-                </PanelTitle>
+                <PanelTitle>Pedido realizado - #{pedidoId}</PanelTitle>
 
                 <ConfirmationText>
-                  Estamos felizes em informar que seu pedido já está em
-                  processo de preparação e, em breve, será entregue no
-                  endereço fornecido.
-                </ConfirmationText>
-
-                <ConfirmationText>
-                  Gostaríamos de ressaltar que nossos entregadores estão
-                  habituados a realizar entregas rápidas.
-                </ConfirmationText>
-
-                <ConfirmationText>
-                  Esperamos que desfrute de uma deliciosa e agradável
-                  experiência gastronômica. Bom apetite!
+                  Seu pedido já está em processo de preparação e, em breve,
+                  será entregue no endereço fornecido. Bom apetite!
                 </ConfirmationText>
 
                 <PanelButton onClick={() => {
