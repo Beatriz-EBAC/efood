@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
 const API = 'https://api-ebac.vercel.app/api/efood/restaurantes';
+const API_CHECKOUT = 'https://api-ebac.vercel.app/api/efood/checkout';
 
 const Header = styled.header`
   background: #fff0e5;
@@ -251,6 +252,15 @@ const ConfirmationText = styled.p`
   margin: 15px 0;
 `;
 
+const ErrorText = styled.p`
+  color: #fff;
+  background: rgba(0, 0, 0, .2);
+  padding: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 12px 0;
+`;
+
 const ProductOverlay = styled.div`
   position: fixed;
   inset: 0;
@@ -335,9 +345,9 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
     ano: '',
   });
 
-  const [pedidoId] = useState(
-    () => Math.floor(10000 + Math.random() * 90000)
-  );
+  const [pedido, setPedido] = useState(null);
+  const [enviandoPedido, setEnviandoPedido] = useState(false);
+  const [erroPedido, setErroPedido] = useState('');
 
   useEffect(() => {
     fetch(API)
@@ -386,9 +396,66 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
     setDadosPagamento((atual) => ({ ...atual, [name]: value }));
   }
 
-  function finalizarPagamento(evento) {
+  async function finalizarPagamento(evento) {
     evento.preventDefault();
-    setEtapa('confirmacao');
+
+    setEnviandoPedido(true);
+    setErroPedido('');
+
+    const dadosPedido = {
+      products: carrinho.map((prato) => ({
+        id: prato.id,
+        price: Number(prato.preco),
+      })),
+      delivery: {
+        receiver: dadosEntrega.nome,
+        address: {
+          description: dadosEntrega.endereco,
+          city: dadosEntrega.cidade,
+          zipCode: dadosEntrega.cep,
+          number: Number(dadosEntrega.numero),
+          complement: dadosEntrega.complemento,
+        },
+      },
+      payment: {
+        card: {
+          name: dadosPagamento.nomeCartao,
+          number: dadosPagamento.numeroCartao.replace(/\D/g, ''),
+          code: Number(dadosPagamento.cvv),
+          expires: {
+            month: Number(dadosPagamento.mes),
+            year: Number(dadosPagamento.ano),
+          },
+        },
+      },
+    };
+
+    try {
+      const resposta = await fetch(API_CHECKOUT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dadosPedido),
+      });
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        throw new Error(
+          dados.message || 'Não foi possível concluir o pedido.'
+        );
+      }
+
+      setPedido(dados);
+      setEtapa('confirmacao');
+    } catch (erro) {
+      setErroPedido(
+        erro.message || 'Ocorreu um erro ao enviar o pedido.'
+      );
+    } finally {
+      setEnviandoPedido(false);
+    }
   }
 
   function comprarProduto() {
@@ -521,35 +588,58 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
                   setEtapa('pagamento');
                 }}>
                   <Field>Quem irá receber
-                    <Input name="nome" value={dadosEntrega.nome}
-                      onChange={atualizarEntrega} required />
+                    <Input
+                      name="nome"
+                      value={dadosEntrega.nome}
+                      onChange={atualizarEntrega}
+                      required
+                    />
                   </Field>
 
                   <Field>Endereço
-                    <Input name="endereco" value={dadosEntrega.endereco}
-                      onChange={atualizarEntrega} required />
+                    <Input
+                      name="endereco"
+                      value={dadosEntrega.endereco}
+                      onChange={atualizarEntrega}
+                      required
+                    />
                   </Field>
 
                   <Field>Cidade
-                    <Input name="cidade" value={dadosEntrega.cidade}
-                      onChange={atualizarEntrega} required />
+                    <Input
+                      name="cidade"
+                      value={dadosEntrega.cidade}
+                      onChange={atualizarEntrega}
+                      required
+                    />
                   </Field>
 
                   <FieldRow>
                     <Field>CEP
-                      <Input name="cep" value={dadosEntrega.cep}
-                        onChange={atualizarEntrega} required />
+                      <Input
+                        name="cep"
+                        value={dadosEntrega.cep}
+                        onChange={atualizarEntrega}
+                        required
+                      />
                     </Field>
+
                     <Field>Número
-                      <Input name="numero" value={dadosEntrega.numero}
-                        onChange={atualizarEntrega} required />
+                      <Input
+                        name="numero"
+                        value={dadosEntrega.numero}
+                        onChange={atualizarEntrega}
+                        required
+                      />
                     </Field>
                   </FieldRow>
 
                   <Field>Complemento
-                    <Input name="complemento"
+                    <Input
+                      name="complemento"
                       value={dadosEntrega.complemento}
-                      onChange={atualizarEntrega} />
+                      onChange={atualizarEntrega}
+                    />
                   </Field>
 
                   <PanelButton type="submit">
@@ -571,43 +661,78 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
 
                 <Form onSubmit={finalizarPagamento}>
                   <Field>Nome no cartão
-                    <Input name="nomeCartao"
+                    <Input
+                      name="nomeCartao"
                       value={dadosPagamento.nomeCartao}
-                      onChange={atualizarPagamento} required />
+                      onChange={atualizarPagamento}
+                      required
+                    />
                   </Field>
 
                   <Field>Número do cartão
-                    <Input name="numeroCartao"
+                    <Input
+                      name="numeroCartao"
                       value={dadosPagamento.numeroCartao}
                       onChange={atualizarPagamento}
-                      inputMode="numeric" maxLength={19} required />
+                      inputMode="numeric"
+                      maxLength={19}
+                      required
+                    />
                   </Field>
 
                   <FieldRow>
                     <Field>CVV
-                      <Input name="cvv" value={dadosPagamento.cvv}
+                      <Input
+                        name="cvv"
+                        value={dadosPagamento.cvv}
                         onChange={atualizarPagamento}
-                        inputMode="numeric" maxLength={4} required />
+                        inputMode="numeric"
+                        maxLength={4}
+                        required
+                      />
                     </Field>
+
                     <Field>Mês
-                      <Input name="mes" value={dadosPagamento.mes}
+                      <Input
+                        name="mes"
+                        value={dadosPagamento.mes}
                         onChange={atualizarPagamento}
-                        placeholder="MM" maxLength={2} required />
+                        placeholder="MM"
+                        maxLength={2}
+                        required
+                      />
                     </Field>
                   </FieldRow>
 
                   <Field>Ano de vencimento
-                    <Input name="ano" value={dadosPagamento.ano}
+                    <Input
+                      name="ano"
+                      value={dadosPagamento.ano}
                       onChange={atualizarPagamento}
-                      placeholder="AAAA" maxLength={4} required />
+                      placeholder="AAAA"
+                      maxLength={4}
+                      required
+                    />
                   </Field>
 
-                  <PanelButton type="submit">
-                    Finalizar pagamento
+                  {erroPedido && (
+                    <ErrorText>{erroPedido}</ErrorText>
+                  )}
+
+                  <PanelButton
+                    type="submit"
+                    disabled={enviandoPedido}
+                  >
+                    {enviandoPedido
+                      ? 'Enviando pedido...'
+                      : 'Finalizar pagamento'}
                   </PanelButton>
                 </Form>
 
-                <PanelButton onClick={() => setEtapa('entrega')}>
+                <PanelButton
+                  onClick={() => setEtapa('entrega')}
+                  disabled={enviandoPedido}
+                >
                   Voltar
                 </PanelButton>
               </>
@@ -615,11 +740,18 @@ function Perfil({ carrinho, adicionarAoCarrinho, removerDoCarrinho }) {
 
             {etapa === 'confirmacao' && (
               <>
-                <PanelTitle>Pedido realizado - #{pedidoId}</PanelTitle>
+                <PanelTitle>
+                  Pedido realizado
+                </PanelTitle>
 
                 <ConfirmationText>
-                  Seu pedido já está em processo de preparação e, em breve,
-                  será entregue no endereço fornecido. Bom apetite!
+                  Seu pedido foi enviado com sucesso!
+                  {pedido?.orderId && (
+                    <> Número do pedido: #{pedido.orderId}.</>
+                  )}
+                  {' '}Seu pedido já está em processo de preparação e,
+                  em breve, será entregue no endereço fornecido.
+                  Bom apetite!
                 </ConfirmationText>
 
                 <PanelButton onClick={() => {
