@@ -1,19 +1,21 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import Home from './pages/Home';
 import Perfil from './pages/Perfil';
 
+import { adicionar, remover } from './store/cartSlice';
+
 function App() {
-  const [carrinho, setCarrinho] = useState([]);
+  const carrinho = useSelector((state) => state.cart.items);
+  const dispatch = useDispatch();
 
   function adicionarAoCarrinho(prato) {
-    setCarrinho((atual) => [...atual, prato]);
+    dispatch(adicionar(prato));
   }
 
   function removerDoCarrinho(index) {
-    setCarrinho((atual) => atual.filter((_, i) => i !== index));
+    dispatch(remover(index));
   }
 
   return (
