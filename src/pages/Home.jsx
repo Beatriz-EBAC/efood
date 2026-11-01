@@ -11,6 +11,8 @@ const Header = styled.header`
   align-items: center;
   justify-content: space-around;
   padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
 const Logo = styled.h1`
@@ -27,14 +29,19 @@ const Slogan = styled.h2`
 const Container = styled.main`
   background-color: #fff8f2;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 40px 20px 55px;
+  flex: 1;
 `;
 
 const Grid = styled.div`
+  width: 100%;
   max-width: 900px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 32px;
 
   @media (max-width: 650px) {
@@ -43,6 +50,7 @@ const Grid = styled.div`
 `;
 
 const Card = styled.article`
+  min-width: 0;
   border: 1px solid #e66767;
   color: #e66767;
   background-color: #fff;
@@ -101,6 +109,8 @@ const DetailsLink = styled(Link)`
 const Footer = styled.footer`
   background-color: #ffebd9;
   min-height: 105px;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
